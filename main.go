@@ -11,28 +11,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/codegangsta/cli"
 	gl "github.com/siddontang/go-log/log"
+	kp "gopkg.in/alecthomas/kingpin.v1"
+)
+
+var (
+	excludes = kp.Flag("excludes", "the file containing the regular expressions to remove from stdout/stderr").Short('e').String()
+	logDir   = kp.Flag("dir", "directory to write standard out and err log files to").Short('d').Default(".").String()
+	logSize  = kp.Flag("size", "file size in megabytes to rotate stdout and stderr files").Short('s').Default("20").Int()
+	logCount = kp.Flag("count", "rotate log file count for stdout and stderr files").Short('c').Default("10").Int()
+	cmdArgs  = kp.Arg("cmd args", "command to run to process stdout and stderr from").Required().Strings()
 )
 
 func main() {
-	app := cli.NewApp()
-	app.Name = "cronsifter"
-	app.Usage = "filter stdout and stderr"
-	app.Version = "0.0.1"
-	app.HideHelp = true
-	app.Flags = []cli.Flag{
-		cli.StringFlag{
-			Name:  "excludes-file",
-			Usage: "file of regular expressions to exclude from the stdout/stderr",
-		},
-	}
-
-	app.Action = func(c *cli.Context) {
-		run(c)
-	}
-
-	app.Run(os.Args)
+	kp.Version("0.0.1")
+	kp.Parse()
+	run()
 }
 
 func regexs(filename string) []*regexp.Regexp {
@@ -56,7 +50,7 @@ func regexs(filename string) []*regexp.Regexp {
 	return rs
 }
 
-func run(c *cli.Context) {
+func run() {
 
 	stdoutHandler, err := gl.NewRotatingFileHandler("stdoutlog", 20*1024*1024, 20)
 	if err != nil {
@@ -69,22 +63,19 @@ func run(c *cli.Context) {
 
 	stdoutLog := gl.New(stdoutHandler, gl.Llevel|gl.Ltime)
 	stderrLog := gl.New(stderrHandler, gl.Llevel|gl.Ltime)
-	stdoutLog.SetLevel(gl.LevelInfo)
-	stderrLog.SetLevel(gl.LevelInfo)
 	defer stdoutHandler.Close()
 	defer stderrHandler.Close()
 
-	excludes := make([]*regexp.Regexp, 0)
+	excludesRegexps := make([]*regexp.Regexp, 0)
 
-	ef := c.String("excludes-file")
-	if len(ef) != 0 {
-		excludes = regexs(ef)
+	if len(*excludes) != 0 {
+		excludesRegexps = regexs(*excludes)
 	}
 
-	stdout, stderr := cmd(c.Args())
+	stdout, stderr := cmd(*cmdArgs)
 	stdoutLog.Info("STDOUT\n%s", stdout)
 	stderrLog.Info("STDERR\n%s", stderr)
-	output(stdout, stderr, excludes)
+	output(stdout, stderr, excludesRegexps)
 	time.Sleep(time.Second * 2)
 }
 

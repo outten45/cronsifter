@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -29,28 +28,8 @@ func main() {
 	run()
 }
 
-func regexs(filename string) []*regexp.Regexp {
-	rs := make([]*regexp.Regexp, 0)
-
-	content, err := ioutil.ReadFile(filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	lines := strings.Split(string(content), "\n")
-
-	for _, line := range lines {
-		r, err := regexp.Compile(line)
-		if err != nil {
-			log.Printf("Regex didn't compile: %s\n", line)
-		} else {
-			rs = append(rs, r)
-		}
-	}
-
-	return rs
-}
-
 func run() {
+	setExcludesRegexps(*excludes)
 
 	stdoutHandler, err := gl.NewRotatingFileHandler("stdoutlog", 20*1024*1024, 20)
 	if err != nil {
@@ -66,12 +45,6 @@ func run() {
 	defer stdoutHandler.Close()
 	defer stderrHandler.Close()
 
-	excludesRegexps := make([]*regexp.Regexp, 0)
-
-	if len(*excludes) != 0 {
-		excludesRegexps = regexs(*excludes)
-	}
-
 	stdout, stderr := cmd(*cmdArgs)
 	stdoutLog.Info("STDOUT\n%s", stdout)
 	stderrLog.Info("STDERR\n%s", stderr)
@@ -84,20 +57,16 @@ func output(stdout, stderr string, excludes []*regexp.Regexp) {
 	slines := strings.Split(stdout, "\n")
 	for i := 0; i < len(slines)-1; i++ {
 		s := slines[i]
-		for _, r := range excludes {
-			if !r.MatchString(s) {
-				fmt.Fprintf(os.Stdout, "%s\n", s)
-			}
+		if !matchAnyExcludes(s) {
+			fmt.Fprintf(os.Stdout, "%s\n", s)
 		}
 	}
 
 	slines = strings.Split(stderr, "\n")
 	for i := 0; i < len(slines)-1; i++ {
 		s := slines[i]
-		for _, r := range excludes {
-			if !r.MatchString(s) {
-				fmt.Fprintf(os.Stderr, "%s\n", s)
-			}
+		if !matchAnyExcludes(s) {
+			fmt.Fprintf(os.Stderr, "%s\n", s)
 		}
 	}
 }

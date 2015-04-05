@@ -9,8 +9,10 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/codegangsta/cli"
+	gl "github.com/siddontang/go-log/log"
 )
 
 func main() {
@@ -31,7 +33,6 @@ func main() {
 	}
 
 	app.Run(os.Args)
-
 }
 
 func regexs(filename string) []*regexp.Regexp {
@@ -56,6 +57,23 @@ func regexs(filename string) []*regexp.Regexp {
 }
 
 func run(c *cli.Context) {
+
+	stdoutHandler, err := gl.NewRotatingFileHandler("stdoutlog", 20*1024*1024, 20)
+	if err != nil {
+		panic(err)
+	}
+	stderrHandler, err := gl.NewRotatingFileHandler("stderrlog", 20*1024*1024, 20)
+	if err != nil {
+		panic(err)
+	}
+
+	stdoutLog := gl.New(stdoutHandler, gl.Llevel|gl.Ltime)
+	stderrLog := gl.New(stderrHandler, gl.Llevel|gl.Ltime)
+	stdoutLog.SetLevel(gl.LevelInfo)
+	stderrLog.SetLevel(gl.LevelInfo)
+	defer stdoutHandler.Close()
+	defer stderrHandler.Close()
+
 	excludes := make([]*regexp.Regexp, 0)
 
 	ef := c.String("excludes-file")
@@ -64,7 +82,10 @@ func run(c *cli.Context) {
 	}
 
 	stdout, stderr := cmd(c.Args())
+	stdoutLog.Info("STDOUT\n%s", stdout)
+	stderrLog.Info("STDERR\n%s", stderr)
 	output(stdout, stderr, excludes)
+	time.Sleep(time.Second * 2)
 }
 
 func output(stdout, stderr string, excludes []*regexp.Regexp) {

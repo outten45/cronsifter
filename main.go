@@ -31,11 +31,11 @@ func main() {
 func run() {
 	setExcludesRegexps(*excludes)
 
-	stdoutHandler, err := gl.NewRotatingFileHandler("stdoutlog", 20*1024*1024, 20)
+	stdoutHandler, err := gl.NewRotatingFileHandler("stdoutlog", *logSize*1024*1024, *logCount)
 	if err != nil {
 		panic(err)
 	}
-	stderrHandler, err := gl.NewRotatingFileHandler("stderrlog", 20*1024*1024, 20)
+	stderrHandler, err := gl.NewRotatingFileHandler("stderrlog", *logSize*1024*1024, *logCount)
 	if err != nil {
 		panic(err)
 	}

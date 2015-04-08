@@ -31,11 +31,13 @@ func main() {
 func run() {
 	setExcludesRegexps(*excludes)
 
-	stdoutHandler, err := gl.NewRotatingFileHandler("stdoutlog", *logSize*1024*1024, *logCount)
+	of := fmt.Sprintf("%s/%s.out.log", *logDir, getCmdName())
+	stdoutHandler, err := gl.NewRotatingFileHandler(of, *logSize*1024*1024, *logCount)
 	if err != nil {
 		panic(err)
 	}
-	stderrHandler, err := gl.NewRotatingFileHandler("stderrlog", *logSize*1024*1024, *logCount)
+	ef := fmt.Sprintf("%s/%s.err.log", *logDir, getCmdName())
+	stderrHandler, err := gl.NewRotatingFileHandler(ef, *logSize*1024*1024, *logCount)
 	if err != nil {
 		panic(err)
 	}
@@ -81,4 +83,10 @@ func cmd(a []string) (o, e string) {
 	}
 	cmd.Wait()
 	return out.String(), err.String()
+}
+
+func getCmdName() string {
+	p1 := os.Args[:1]
+	parts := strings.Split(p1[0], "/")
+	return parts[len(parts)-1]
 }

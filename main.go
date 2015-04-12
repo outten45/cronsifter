@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -11,20 +12,20 @@ import (
 	"time"
 
 	gl "github.com/siddontang/go-log/log"
-	kp "gopkg.in/alecthomas/kingpin.v1"
 )
 
 var (
-	excludes = kp.Flag("excludes", "the file containing the regular expressions to remove from stdout/stderr").Short('e').String()
-	logDir   = kp.Flag("dir", "directory to write standard out and err log files to").Short('d').Default(".").String()
-	logSize  = kp.Flag("size", "file size in megabytes to rotate stdout and stderr files").Short('s').Default("20").Int()
-	logCount = kp.Flag("count", "rotate log file count for stdout and stderr files").Short('c').Default("10").Int()
-	cmdArgs  = kp.Arg("cmd args", "command to run to process stdout and stderr from").Required().Strings()
+	excludes = flag.String("excludes", "", "the file containing the regular expressions to remove from stdout/stderr")
+	logDir   = flag.String("dir", ".", "directory to write standard out and err log files to")
+	logSize  = flag.Int("size", 20, "file size in megabytes to rotate stdout and stderr files")
+	logCount = flag.Int("count", 20, "rotate log file count for stdout and stderr files")
+	cmdArgs  = []string{}
 )
 
 func main() {
-	kp.Version("0.0.1")
-	kp.Parse()
+	flag.Parse()
+	cmdArgs = flag.Args()
+	// fmt.Println("cmdArgs>>>>>> ", cmdArgs)
 	run()
 }
 
@@ -47,7 +48,7 @@ func run() {
 	defer stdoutHandler.Close()
 	defer stderrHandler.Close()
 
-	stdout, stderr := cmd(*cmdArgs)
+	stdout, stderr := cmd(cmdArgs)
 	stdoutLog.Info("STDOUT\n%s", stdout)
 	stderrLog.Info("STDERR\n%s", stderr)
 	output(stdout, stderr, excludesRegexps)

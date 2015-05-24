@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"regexp"
 	"strings"
 	"time"
 
@@ -15,11 +14,11 @@ import (
 )
 
 var (
-	excludes = flag.String("excludes", "", "the file containing the regular expressions to remove from stdout/stderr")
-	logDir   = flag.String("dir", ".", "directory to write standard out and err log files to")
-	logSize  = flag.Int("size", 20, "file size in megabytes to rotate stdout and stderr files")
-	logCount = flag.Int("count", 20, "rotate log file count for stdout and stderr files")
-	cmdArgs  = []string{}
+	excludesFile = flag.String("excludes", "", "the file containing the regular expressions to remove from stdout/stderr")
+	logDir       = flag.String("dir", ".", "directory to write standard out and err log files to")
+	logSize      = flag.Int("size", 20, "file size in megabytes to rotate stdout and stderr files")
+	logCount     = flag.Int("count", 20, "rotate log file count for stdout and stderr files")
+	cmdArgs      = []string{}
 )
 
 func main() {
@@ -30,7 +29,8 @@ func main() {
 }
 
 func run() {
-	setExcludesRegexps(*excludes)
+	regexps := GetExcludesRegexps(*excludesFile)
+	regexIn, regexOut := RegexChannels(regexps)
 
 	of := fmt.Sprintf("%s/%s.out.log", *logDir, getCmdName())
 	stdoutHandler, err := gl.NewRotatingFileHandler(of, *logSize*1024*1024, *logCount)
@@ -51,16 +51,16 @@ func run() {
 	stdout, stderr := cmd(cmdArgs)
 	stdoutLog.Info("STDOUT\n%s", stdout)
 	stderrLog.Info("STDERR\n%s", stderr)
-	output(stdout, stderr, excludesRegexps)
+	output(stdout, stderr, regexIn, regexOut)
 	time.Sleep(time.Second * 2)
 }
 
-func output(stdout, stderr string, excludes []*regexp.Regexp) {
+func output(stdout, stderr string, regexIn, regexOut chan string) {
 
 	slines := strings.Split(stdout, "\n")
 	for i := 0; i < len(slines)-1; i++ {
 		s := slines[i]
-		if !matchAnyExcludes(s) {
+		if CheckRegex(regexIn, regexOut, s) == true {
 			fmt.Fprintf(os.Stdout, "%s\n", s)
 		}
 	}
@@ -68,7 +68,7 @@ func output(stdout, stderr string, excludes []*regexp.Regexp) {
 	slines = strings.Split(stderr, "\n")
 	for i := 0; i < len(slines)-1; i++ {
 		s := slines[i]
-		if !matchAnyExcludes(s) {
+		if CheckRegex(regexIn, regexOut, s) {
 			fmt.Fprintf(os.Stderr, "%s\n", s)
 		}
 	}

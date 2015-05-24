@@ -18,7 +18,7 @@ func createRegexps() []*regexp.Regexp {
 	return regexps
 }
 
-func TestRegexChannel(t *testing.T) {
+func TestRegexDaisyChain(t *testing.T) {
 	regexps := createRegexps()
 	left, right := RegexChannels(regexps)
 	var res string
@@ -42,6 +42,22 @@ func TestRegexChannel(t *testing.T) {
 	}
 
 	if CheckRegex(left, right, "abc") == true {
-		t.Errorf("Expected CheckRegex to return true, but it was false")
+		t.Error("Expected CheckRegex to return true, but it was false")
 	}
+
+	if CheckRegex(left, right, "cba") == false {
+		t.Error("Expected CheckRegex to return false, but it was true")
+	}
+}
+
+func TestReadingRegexpFromFile(t *testing.T) {
+	regexps := GetExcludesRegexps("files/exclude.txt")
+	if len(regexps) < 2 {
+		t.Error("File did not parse correctly. There should be more that 2 regexs.")
+	}
+
+	if !regexps[0].MatchString("this should be ignored.") {
+		t.Errorf("Line with \"ignore\" in it should match.")
+	}
+
 }

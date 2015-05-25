@@ -25,8 +25,7 @@ func run() {
 	regexps := GetExcludesRegexps(*excludesFile)
 	matcher := RegexChannels(regexps)
 
-	dout := make(chan string)
-	derr := make(chan string)
+	done := make(chan string)
 	cout := make(chan string)
 	cerr := make(chan string)
 
@@ -36,17 +35,18 @@ func run() {
 		for s := range cout {
 			PrintCheckRegexp(os.Stdout, s, matcher)
 		}
-		dout <- "done"
+		done <- "done"
 	}()
 	go func() {
 		for s := range cerr {
 			PrintCheckRegexp(os.Stderr, s, matcher)
 		}
-		derr <- "done"
+		done <- "done"
 	}()
 
-	<-dout
-	<-derr
+	<-done
+	<-done
+	close(done)
 }
 
 func getCmdName() string {

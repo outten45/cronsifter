@@ -20,32 +20,32 @@ func createRegexps() []*regexp.Regexp {
 
 func TestRegexDaisyChain(t *testing.T) {
 	regexps := createRegexps()
-	left, right := RegexChannels(regexps)
+	matcher := RegexChannels(regexps)
 	var res string
 
-	go func(c chan string) { c <- "unk" }(right)
-	res = <-left
+	go func(c chan string) { c <- "unk" }(matcher.Right)
+	res = <-matcher.Left
 	if res != "unk" {
 		t.Errorf("Expected the call to return \"unk\", but got [%s]", res)
 	}
 
-	go func(c chan string) { c <- "abcd" }(right)
-	res = <-left
+	go func(c chan string) { c <- "abcd" }(matcher.Right)
+	res = <-matcher.Left
 	if res != "" {
 		t.Errorf("Expected the call to return an empty string, but we got [%s]", res)
 	}
 
-	go func(c chan string) { c <- "aoeuhaouhaeotuhalmn" }(right)
-	res = <-left
+	go func(c chan string) { c <- "aoeuhaouhaeotuhalmn" }(matcher.Right)
+	res = <-matcher.Left
 	if res != "" {
 		t.Errorf("Expected the call to return an empty string, but we got [%s]", res)
 	}
 
-	if CheckRegex(left, right, "abc") == true {
+	if CheckRegex(matcher, "abc") == true {
 		t.Error("Expected CheckRegex to return true, but it was false")
 	}
 
-	if CheckRegex(left, right, "cba") == false {
+	if CheckRegex(matcher, "cba") == false {
 		t.Error("Expected CheckRegex to return false, but it was true")
 	}
 }

@@ -8,11 +8,11 @@ import (
 
 // PrintCheckRegexp takes a Writer to print the string to if the
 // regex isn't in.
-func PrintCheckRegexp(w io.Writer, s string, regexIn, regexOut chan string) {
+func PrintCheckRegexp(w io.Writer, s string, matcher *Matcher) {
 	slines := strings.Split(s, "\n")
 	for i := 0; i < len(slines); i++ {
 		s := slines[i]
-		if CheckRegex(regexIn, regexOut, s) == true {
+		if CheckRegex(matcher, s) == true {
 			fmt.Fprintf(w, "%s\n", s)
 		}
 	}

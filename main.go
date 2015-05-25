@@ -23,7 +23,7 @@ func main() {
 
 func run() {
 	regexps := GetExcludesRegexps(*excludesFile)
-	regexIn, regexOut := RegexChannels(regexps)
+	matcher := RegexChannels(regexps)
 
 	dout := make(chan string)
 	derr := make(chan string)
@@ -34,13 +34,13 @@ func run() {
 
 	go func() {
 		for s := range cout {
-			PrintCheckRegexp(os.Stdout, s, regexIn, regexOut)
+			PrintCheckRegexp(os.Stdout, s, matcher)
 		}
 		dout <- "done"
 	}()
 	go func() {
 		for s := range cerr {
-			PrintCheckRegexp(os.Stderr, s, regexIn, regexOut)
+			PrintCheckRegexp(os.Stderr, s, matcher)
 		}
 		derr <- "done"
 	}()

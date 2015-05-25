@@ -8,9 +8,6 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"time"
-
-	gl "github.com/siddontang/go-log/log"
 )
 
 var (
@@ -32,33 +29,29 @@ func run() {
 	regexps := GetExcludesRegexps(*excludesFile)
 	regexIn, regexOut := RegexChannels(regexps)
 
-	of := fmt.Sprintf("%s/%s.out.log", *logDir, getCmdName())
-	stdoutHandler, err := gl.NewRotatingFileHandler(of, *logSize*1024*1024, *logCount)
-	if err != nil {
-		panic(err)
+	cout := make(chan string)
+	cerr := make(chan string)
+
+	go ExecCommand(cmdArgs, cout, cerr)
+
+	var buffout bytes.Buffer
+	for s := range cout {
+		buffout.WriteString(fmt.Sprintln(s))
 	}
-	ef := fmt.Sprintf("%s/%s.err.log", *logDir, getCmdName())
-	stderrHandler, err := gl.NewRotatingFileHandler(ef, *logSize*1024*1024, *logCount)
-	if err != nil {
-		panic(err)
+	var bufferr bytes.Buffer
+	for s := range cerr {
+		bufferr.WriteString(fmt.Sprintln(s))
 	}
 
-	stdoutLog := gl.New(stdoutHandler, gl.Llevel|gl.Ltime)
-	stderrLog := gl.New(stderrHandler, gl.Llevel|gl.Ltime)
-	defer stdoutHandler.Close()
-	defer stderrHandler.Close()
-
-	stdout, stderr := cmd(cmdArgs)
-	stdoutLog.Info("STDOUT\n%s", stdout)
-	stderrLog.Info("STDERR\n%s", stderr)
-	output(stdout, stderr, regexIn, regexOut)
-	time.Sleep(time.Second * 2)
+	// stdoutLog.Info("STDOUT\n%s", stdout)
+	// stderrLog.Info("STDERR\n%s", stderr)
+	output(buffout.String(), bufferr.String(), regexIn, regexOut)
+	// time.Sleep(time.Second * 2)
 }
 
 func output(stdout, stderr string, regexIn, regexOut chan string) {
-
 	slines := strings.Split(stdout, "\n")
-	for i := 0; i < len(slines)-1; i++ {
+	for i := 0; i < len(slines); i++ {
 		s := slines[i]
 		if CheckRegex(regexIn, regexOut, s) == true {
 			fmt.Fprintf(os.Stdout, "%s\n", s)

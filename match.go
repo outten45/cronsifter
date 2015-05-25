@@ -7,6 +7,17 @@ import (
 	"strings"
 )
 
+func matchLine(r *regexp.Regexp, left chan<- string, right <-chan string) {
+	for {
+		line := <-right
+		if !r.MatchString(line) {
+			left <- line
+		} else {
+			left <- ""
+		}
+	}
+}
+
 // GetExcludesRegexps is given a filename and returns a slice of
 // regular expressions for each line in the file.
 func GetExcludesRegexps(filename string) []*regexp.Regexp {
@@ -32,17 +43,6 @@ func GetExcludesRegexps(filename string) []*regexp.Regexp {
 	return excludesRegexps
 }
 
-func matchLine(r *regexp.Regexp, left chan<- string, right <-chan string) {
-	for {
-		line := <-right
-		if !r.MatchString(line) {
-			left <- line
-		} else {
-			left <- ""
-		}
-	}
-}
-
 // CheckRegex takes an in and out channel and returns a true if
 // none of the regex match.
 func CheckRegex(left <-chan string, right chan<- string, line string) bool {
@@ -65,6 +65,5 @@ func RegexChannels(regexps []*regexp.Regexp) (chan string, chan string) {
 		go matchLine(r, left, right)
 		left = right
 	}
-
 	return leftmost, right
 }

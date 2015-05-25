@@ -16,7 +16,7 @@ func handleOutput(s *bufio.Scanner, out chan<- string) {
 
 // ExecCommand take a slice of string to be executed as the
 // command.
-func ExecCommand(a []string, stdout chan string, stderr chan string) {
+func ExecCommand(a []string, stdout chan<- string, stderr chan<- string) {
 	cmd := exec.Command(a[0], a[1:]...)
 
 	stdoutPipe, err := cmd.StdoutPipe()
@@ -41,5 +41,4 @@ func ExecCommand(a []string, stdout chan string, stderr chan string) {
 	if err := cmd.Wait(); err != nil {
 		log.Fatalf("RunCommand: cmd.Wait(): %v", err)
 	}
-
 }

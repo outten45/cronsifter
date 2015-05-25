@@ -1,12 +1,8 @@
 package main
 
 import (
-	"bytes"
 	"flag"
-	"fmt"
-	"log"
 	"os"
-	"os/exec"
 	"strings"
 )
 
@@ -29,54 +25,28 @@ func run() {
 	regexps := GetExcludesRegexps(*excludesFile)
 	regexIn, regexOut := RegexChannels(regexps)
 
+	dout := make(chan string)
+	derr := make(chan string)
 	cout := make(chan string)
 	cerr := make(chan string)
 
 	go ExecCommand(cmdArgs, cout, cerr)
 
-	var buffout bytes.Buffer
-	for s := range cout {
-		buffout.WriteString(fmt.Sprintln(s))
-	}
-	var bufferr bytes.Buffer
-	for s := range cerr {
-		bufferr.WriteString(fmt.Sprintln(s))
-	}
-
-	// stdoutLog.Info("STDOUT\n%s", stdout)
-	// stderrLog.Info("STDERR\n%s", stderr)
-	output(buffout.String(), bufferr.String(), regexIn, regexOut)
-	// time.Sleep(time.Second * 2)
-}
-
-func output(stdout, stderr string, regexIn, regexOut chan string) {
-	slines := strings.Split(stdout, "\n")
-	for i := 0; i < len(slines); i++ {
-		s := slines[i]
-		if CheckRegex(regexIn, regexOut, s) == true {
-			fmt.Fprintf(os.Stdout, "%s\n", s)
+	go func() {
+		for s := range cout {
+			PrintCheckRegexp(os.Stdout, s, regexIn, regexOut)
 		}
-	}
-
-	slines = strings.Split(stderr, "\n")
-	for i := 0; i < len(slines)-1; i++ {
-		s := slines[i]
-		if CheckRegex(regexIn, regexOut, s) {
-			fmt.Fprintf(os.Stderr, "%s\n", s)
+		dout <- "done"
+	}()
+	go func() {
+		for s := range cerr {
+			PrintCheckRegexp(os.Stderr, s, regexIn, regexOut)
 		}
-	}
-}
+		derr <- "done"
+	}()
 
-func cmd(a []string) (o, e string) {
-	cmd := exec.Command(a[0], a[1:]...)
-	var out, err bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &err
-	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
-	}
-	cmd.Wait()
-	return out.String(), err.String()
+	<-dout
+	<-derr
 }
 
 func getCmdName() string {

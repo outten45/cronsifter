@@ -17,15 +17,11 @@ var (
 func main() {
 	flag.Parse()
 	cmdArgs = flag.Args()
-	// fmt.Println("cmdArgs>>>>>> ", cmdArgs)
-	run()
-}
 
-func run() {
 	regexps := GetExcludesRegexps(*excludesFile)
 	matcher := RegexChannels(regexps)
 
-	done := make(chan string)
+	done := make(chan bool)
 	cout := make(chan string)
 	cerr := make(chan string)
 
@@ -35,13 +31,13 @@ func run() {
 		for s := range cout {
 			PrintCheckRegexp(os.Stdout, s, matcher)
 		}
-		done <- "done"
+		done <- true
 	}()
 	go func() {
 		for s := range cerr {
 			PrintCheckRegexp(os.Stderr, s, matcher)
 		}
-		done <- "done"
+		done <- true
 	}()
 
 	<-done

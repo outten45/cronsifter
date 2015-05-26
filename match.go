@@ -1,17 +1,45 @@
 package main
 
 import (
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"regexp"
 	"strings"
 )
 
+type Match interface {
+	CheckRegex(string) bool
+	PrintCheckRegexp(io.Writer, string)
+}
+
 // Matcher the left and right channels for the Matcher
 // to use.
 type Matcher struct {
 	Left  chan string
 	Right chan string
+}
+
+// CheckRegex takes an in and out channel and returns a true if
+// none of the regex match.
+func (m *Matcher) CheckRegex(line string) bool {
+	// left <-chan string, right chan<- string
+	go func(c chan<- string) { c <- line }(m.Right)
+	res := <-m.Left
+	return (res == line)
+}
+
+// PrintCheckRegexp takes a Writer to print the string to if the
+// regex isn't in.
+func (m *Matcher) PrintCheckRegexp(w io.Writer, s string) {
+	slines := strings.Split(s, "\n")
+	for i := 0; i < len(slines); i++ {
+		s := slines[i]
+		if m.CheckRegex(s) == true {
+			fmt.Fprintf(w, "%s\n", s)
+		}
+	}
 }
 
 func matchLine(r *regexp.Regexp, left chan<- string, right <-chan string) {
@@ -65,13 +93,4 @@ func RegexChannels(regexps []*regexp.Regexp) *Matcher {
 		left = right
 	}
 	return &Matcher{Left: leftmost, Right: right}
-}
-
-// CheckRegex takes an in and out channel and returns a true if
-// none of the regex match.
-func CheckRegex(matcher *Matcher, line string) bool {
-	// left <-chan string, right chan<- string
-	go func(c chan<- string) { c <- line }(matcher.Right)
-	res := <-matcher.Left
-	return (res == line)
 }

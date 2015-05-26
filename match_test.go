@@ -41,11 +41,11 @@ func TestRegexDaisyChain(t *testing.T) {
 		t.Errorf("Expected the call to return an empty string, but we got [%s]", res)
 	}
 
-	if CheckRegex(matcher, "abc") == true {
+	if matcher.CheckRegex("abc") == true {
 		t.Error("Expected CheckRegex to return true, but it was false")
 	}
 
-	if CheckRegex(matcher, "cba") == false {
+	if matcher.CheckRegex("cba") == false {
 		t.Error("Expected CheckRegex to return false, but it was true")
 	}
 }

@@ -29,13 +29,13 @@ func main() {
 
 	go func() {
 		for s := range cout {
-			PrintCheckRegexp(os.Stdout, s, matcher)
+			matcher.PrintCheckRegexp(os.Stdout, s)
 		}
 		done <- true
 	}()
 	go func() {
 		for s := range cerr {
-			PrintCheckRegexp(os.Stderr, s, matcher)
+			matcher.PrintCheckRegexp(os.Stderr, s)
 		}
 		done <- true
 	}()

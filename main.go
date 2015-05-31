@@ -2,6 +2,8 @@ package main
 
 import (
 	"flag"
+	"fmt"
+	"log"
 	"os"
 	"strings"
 )
@@ -21,6 +23,15 @@ func main() {
 	regexps := GetExcludesRegexps(*excludesFile)
 	matcher := RegexChannels(regexps)
 
+	stdoutLog, err := NewSimpleLogger(getStdoutLogFile(), 1000000, 20)
+	if err != nil {
+		log.Fatalf("Error with stdout file: %v", err)
+	}
+	stderrLog, err := NewSimpleLogger(getStderrLogFile(), 1000000, 20)
+	if err != nil {
+		log.Fatalf("Error with stderr file: %v", err)
+	}
+
 	done := make(chan bool)
 	cout := make(chan string)
 	cerr := make(chan string)
@@ -30,12 +41,14 @@ func main() {
 	go func() {
 		for s := range cout {
 			matcher.PrintCheckRegexp(os.Stdout, s)
+			stdoutLog.Write([]byte(s))
 		}
 		done <- true
 	}()
 	go func() {
 		for s := range cerr {
 			matcher.PrintCheckRegexp(os.Stderr, s)
+			stderrLog.Write([]byte(s))
 		}
 		done <- true
 	}()
@@ -43,6 +56,14 @@ func main() {
 	<-done
 	<-done
 	close(done)
+}
+
+func getStdoutLogFile() string {
+	return fmt.Sprintf("%s.out.log", getCmdName())
+}
+
+func getStderrLogFile() string {
+	return fmt.Sprintf("%s.err.log", getCmdName())
 }
 
 func getCmdName() string {

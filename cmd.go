@@ -6,6 +6,8 @@ import (
 	"os/exec"
 )
 
+var execCommand = exec.Command
+
 func handleOutput(s *bufio.Scanner, out chan<- string) {
 	defer close(out)
 	for s.Scan() {
@@ -18,7 +20,7 @@ func handleOutput(s *bufio.Scanner, out chan<- string) {
 // command. stdout and stderr are passed to the channels handed
 // to the function.
 func ExecCommand(a []string, stdout chan<- string, stderr chan<- string) {
-	cmd := exec.Command(a[0], a[1:]...)
+	cmd := execCommand(a[0], a[1:]...)
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
 		log.Fatalf("RunCommand: cmd.StdoutPipe(): %v", err)

@@ -26,7 +26,6 @@ func NewSimpleLogger(filename string, maxBytes, fileCount int) (*SimpleLogger, e
 
 	sl := &SimpleLogger{filename: filename, maxBytes: maxBytes, fileCount: fileCount}
 
-	fmt.Printf("]]]]> open file: %s\n", sl.filename)
 	var err error
 	sl.file, err = os.OpenFile(sl.filename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
@@ -38,7 +37,6 @@ func NewSimpleLogger(filename string, maxBytes, fileCount int) (*SimpleLogger, e
 
 // Write the given bytes to the file.
 func (l *SimpleLogger) Write(b []byte) (int, error) {
-	fmt.Printf(")))) Write to log: %s\n", b)
 	l.rotate()
 	return l.file.Write(append(b, []byte("\n")...))
 }

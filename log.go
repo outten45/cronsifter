@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path"
+	"time"
 )
 
 // Simple logger for writing to a file. This is heavily
@@ -38,7 +40,11 @@ func NewSimpleLogger(filename string, maxBytes, fileCount int) (*SimpleLogger, e
 // Write the given bytes to the file.
 func (l *SimpleLogger) Write(b []byte) (int, error) {
 	l.rotate()
-	return l.file.Write(append(b, []byte("\n")...))
+	var buf bytes.Buffer
+	buf.WriteString(fmt.Sprintf("%s: ", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006")))
+	buf.Write(b)
+	buf.WriteString("\n")
+	return l.file.Write(buf.Bytes())
 }
 
 // Close the SimpleLogger's file handle.

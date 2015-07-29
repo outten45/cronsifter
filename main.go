@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -36,7 +38,12 @@ func main() {
 	cout := make(chan string)
 	cerr := make(chan string)
 
-	go ExecCommand(cmdArgs, cout, cerr)
+	if len(cmdArgs) > 0 {
+		go ExecCommand(cmdArgs, cout, cerr)
+	} else {
+		go readStdin(cout)
+		close(cerr)
+	}
 
 	go func() {
 		for s := range cout {
@@ -56,6 +63,19 @@ func main() {
 	<-done
 	<-done
 	close(done)
+}
+
+func readStdin(stdin chan<- string) {
+	defer close(stdin)
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		input, err := reader.ReadString('\n')
+		if err != nil && err == io.EOF {
+			// close(stdin)
+			break
+		}
+		stdin <- strings.TrimRight(input, "\n")
+	}
 }
 
 func getStdoutLogFile() string {

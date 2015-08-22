@@ -43,7 +43,7 @@ func (l *SimpleLogger) Write(b []byte) (int, error) {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("%s: ", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006")))
 	buf.Write(b)
-	if b[len(b)-1] != '\n' {
+	if len(b) > 0 && b[len(b)-1] != '\n' {
 		buf.WriteString("\n")
 	}
 	return l.file.Write(buf.Bytes())

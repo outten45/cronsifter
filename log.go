@@ -1,4 +1,4 @@
-package main
+package cronsifter
 
 import (
 	"bytes"

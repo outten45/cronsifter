@@ -8,6 +8,8 @@ import (
 	"log"
 	"os"
 	"strings"
+
+	"github.com/outten45/cronsifter"
 )
 
 var (
@@ -22,14 +24,14 @@ func main() {
 	flag.Parse()
 	cmdArgs = flag.Args()
 
-	regexps := GetExcludesRegexps(*excludesFile)
-	matcher := RegexChannels(regexps)
+	regexps := cronsifter.GetExcludesRegexps(*excludesFile)
+	matcher := cronsifter.RegexChannels(regexps)
 
-	stdoutLog, err := NewSimpleLogger(getStdoutLogFile(), (*logSize * 1024), *logCount)
+	stdoutLog, err := cronsifter.NewSimpleLogger(getStdoutLogFile(), (*logSize * 1024), *logCount)
 	if err != nil {
 		log.Fatalf("Error with stdout file: %v", err)
 	}
-	stderrLog, err := NewSimpleLogger(getStderrLogFile(), (*logSize * 1024), *logCount)
+	stderrLog, err := cronsifter.NewSimpleLogger(getStderrLogFile(), (*logSize * 1024), *logCount)
 	if err != nil {
 		log.Fatalf("Error with stderr file: %v", err)
 	}
@@ -39,7 +41,7 @@ func main() {
 	cerr := make(chan string)
 
 	if len(cmdArgs) > 0 {
-		go ExecCommand(cmdArgs, cout, cerr)
+		go cronsifter.ExecCommand(cmdArgs, cout, cerr)
 	} else {
 		go readStdin(cout)
 		close(cerr)

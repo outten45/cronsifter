@@ -25,11 +25,11 @@ func main() {
 	regexps := GetExcludesRegexps(*excludesFile)
 	matcher := RegexChannels(regexps)
 
-	stdoutLog, err := NewSimpleLogger(getStdoutLogFile(), 1000000, 20)
+	stdoutLog, err := NewSimpleLogger(getStdoutLogFile(), (*logSize * 1024), *logCount)
 	if err != nil {
 		log.Fatalf("Error with stdout file: %v", err)
 	}
-	stderrLog, err := NewSimpleLogger(getStderrLogFile(), 1000000, 20)
+	stderrLog, err := NewSimpleLogger(getStderrLogFile(), (*logSize * 1024), *logCount)
 	if err != nil {
 		log.Fatalf("Error with stderr file: %v", err)
 	}

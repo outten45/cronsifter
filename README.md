@@ -14,4 +14,8 @@ your PATH if it isn't already there.
 
     export PATH=$PATH:$GOPATH/bin
 
+## Building
 
+To build the linux binary:
+
+    GOOS=linux go build -v .

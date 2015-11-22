@@ -52,7 +52,6 @@ type Process struct {
 	Command  string
 	Args     []string
 	Delay    string
-	Ping     string
 	Pid      int
 	Status   string
 	OsP      *os.Process
@@ -111,10 +110,7 @@ func (p *Process) monitor() {
 	select {
 	case s := <-status:
 		log.Printf("%s exit=%s, success=%#v, exited=%#v, respawn_count=%#v\n", p.Command, s, s.Success(), s.Exited(), p.respawns)
-		// log.Printf("%s success = %#v\n", p.Command, s.Success())
-		// log.Printf("%s exited = %#v\n", p.Command, s.Exited())
 		p.respawns++
-		// log.Printf("%s respawns = %#v\n", p.Command, p.respawns)
 		if p.Delay != "" {
 			log.Printf("%s sleeping for %#v before restarting\n", p.Command, p.Delay)
 			t, _ := time.ParseDuration(p.Delay)

@@ -2,7 +2,6 @@ package cronsifter
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -48,6 +47,7 @@ func ExecCommand(a []string, stdout chan<- string, stderr chan<- string) {
 	}
 }
 
+// Process representing the process that is going to be run.
 type Process struct {
 	Command  string
 	Args     []string
@@ -59,6 +59,7 @@ type Process struct {
 	respawns int
 }
 
+// RunIt runs the Process and makes sure it keeps running.
 func RunIt(p *Process) chan *Process {
 	ch := make(chan *Process)
 	go func() {
@@ -70,7 +71,6 @@ func RunIt(p *Process) chan *Process {
 	return ch
 }
 
-// Run the process
 func (p *Process) run() {
 	wd, _ := os.Getwd()
 	proc := &os.ProcAttr{
@@ -110,48 +110,19 @@ func (p *Process) monitor() {
 	}()
 	select {
 	case s := <-status:
-		log.Printf("%s %s\n", p.Command, s)
-		log.Printf("%s success = %#v\n", p.Command, s.Success())
-		log.Printf("%s exited = %#v\n", p.Command, s.Exited())
+		log.Printf("%s exit=%s, success=%#v, exited=%#v, respawn_count=%#v\n", p.Command, s, s.Success(), s.Exited(), p.respawns)
+		// log.Printf("%s success = %#v\n", p.Command, s.Success())
+		// log.Printf("%s exited = %#v\n", p.Command, s.Exited())
 		p.respawns++
-		log.Printf("%s respawns = %#v\n", p.Command, p.respawns)
+		// log.Printf("%s respawns = %#v\n", p.Command, p.respawns)
 		if p.Delay != "" {
-			log.Printf("%s sleeping for %#v\n", p.Command, p.Delay)
+			log.Printf("%s sleeping for %#v before restarting\n", p.Command, p.Delay)
 			t, _ := time.ParseDuration(p.Delay)
 			time.Sleep(t)
 		}
-		p.restart()
+		RunIt(p)
 		p.Status = "restarted"
 	case err := <-died:
-		p.release("killed")
 		log.Printf("%d %s killed = %#v\n", p.OsP.Pid, p.Command, err)
 	}
-}
-
-func (p *Process) restart() (chan *Process, string) {
-	p.stop()
-	message := fmt.Sprintf("%s restarted.\n", p.Command)
-	ch := RunIt(p)
-	return ch, message
-}
-
-func (p *Process) stop() string {
-	if p.OsP != nil {
-		cmd := exec.Command("kill", fmt.Sprintf("%d", p.OsP.Pid))
-		_, err := cmd.CombinedOutput()
-		if err != nil {
-			log.Println(err)
-		}
-	}
-	p.release("stopped")
-	message := fmt.Sprintf("%s stopped.\n", p.Command)
-	return message
-}
-
-func (p *Process) release(status string) {
-	if p.OsP != nil {
-		p.OsP.Release()
-	}
-	p.Pid = 0
-	p.Status = status
 }

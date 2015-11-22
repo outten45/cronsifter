@@ -28,7 +28,7 @@ To build the linux binary:
 Look in the `$GOPATH/bin/linux_amd64/` directory for the `cronsifter` and
 `srunner`.
 
-## Commands
+## Binaries
 
 ### cronsifter
 
@@ -70,3 +70,6 @@ variable which is parsed using
 
 This would start the gohttp command and if it failed, `srunner` would wait 3
 minutes before respawning the process.
+
+Thanks to [goforever](https://github.com/gwoo/goforever) as a reference on how
+to keep a subprocess running.

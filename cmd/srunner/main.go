@@ -25,18 +25,19 @@ restarted if it stops.
 	flag.Parse()
 	cmdArgs := flag.Args()
 
-	delay := os.Getenv("SPAWN_DELAY")
+	delay := os.Getenv("SRUNNER_SPAWN_DELAY")
 	if delay == "" {
 		delay = "10s"
 	}
+
+	done := make(chan bool)
 
 	p := &cronsifter.Process{
 		Command: cmdArgs[0],
 		Args:    cmdArgs[1:],
 		Delay:   delay,
+		Done:    done,
 	}
-	ch := cronsifter.RunIt(p)
-	<-ch
-	<-ch
-
+	cronsifter.RunIt(p)
+	<-done
 }

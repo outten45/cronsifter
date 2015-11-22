@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"syscall"
 	"time"
 )
 
@@ -54,6 +55,7 @@ type Process struct {
 	Delay    string
 	Pid      int
 	Status   string
+	Done     chan bool
 	OsP      *os.Process
 	respawns int
 }
@@ -109,6 +111,9 @@ func (p *Process) monitor() {
 	}()
 	select {
 	case s := <-status:
+		if status, ok := s.Sys().(syscall.WaitStatus); ok {
+			log.Printf("Exit Status: %d", status.ExitStatus())
+		}
 		log.Printf("%s exit=%s, success=%#v, exited=%#v, respawn_count=%#v\n", p.Command, s, s.Success(), s.Exited(), p.respawns)
 		p.respawns++
 		if p.Delay != "" {

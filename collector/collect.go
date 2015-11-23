@@ -14,6 +14,7 @@ type Event struct {
 	Time        int
 	Description string
 	Tags        []string
+	Token       string
 }
 
 // JSONReader returns a io.Reader with the json in it.

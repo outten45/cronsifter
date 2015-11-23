@@ -17,6 +17,8 @@ var (
 	logDir       = flag.String("dir", ".", "directory to write standard out and err log files to")
 	logSize      = flag.Int("size", 20, "file size in megabytes to rotate stdout and stderr files")
 	logCount     = flag.Int("count", 20, "rotate log file count for stdout and stderr files")
+	collectURL   = flag.String("collecturl", "", "the URL to post the results of the cron")
+	collectToken = flag.String("collecttoken", "", "the API token to send with the request")
 	cmdArgs      = []string{}
 )
 
@@ -73,7 +75,6 @@ func readStdin(stdin chan<- string) {
 	for {
 		input, err := reader.ReadString('\n')
 		if err != nil && err == io.EOF {
-			// close(stdin)
 			break
 		}
 		stdin <- strings.TrimRight(input, "\n")

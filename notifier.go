@@ -12,6 +12,17 @@ type Server struct {
 	URL string
 }
 
+// NewEvent creates a collector.Event that contains some default
+// values set like the Service, Host and Time.
+func NewEvent(state, description, token string, tags []string) *collector.Event {
+	e := &collector.Event{
+		State:       state,
+		Description: description,
+		Tags:        tags,
+	}
+	return e
+}
+
 // Notify post the Event to the given server.
 func Notify(s *Server, e *collector.Event) {
 	resp, err := http.Post(s.URL, "application/json", e.JSONReader())

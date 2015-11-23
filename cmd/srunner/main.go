@@ -40,4 +40,5 @@ restarted if it stops.
 	}
 	cronsifter.RunIt(p)
 	<-done
+	close(done)
 }

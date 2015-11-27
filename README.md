@@ -55,7 +55,7 @@ command to cronsifter to then filter the results.
 
 **Piping the stdout/stderr to cronsifter**
 
-    > command_to_run.sh | cronsifter -excludes=excludes.txt
+    > command_to_run.sh 2>&1 | cronsifter -excludes=excludes.txt
 
 ### srunner
 
@@ -69,7 +69,7 @@ environment variable which is parsed using
     > SRUNNER_SPAWN_DELAY="3m" srunner gohttp
 
 This would start the gohttp command and if it failed, `srunner` would wait 3
-minutes before respawning the process.
+minutes before re-spawning the process.
 
 Thanks to [goforever](https://github.com/gwoo/goforever) as a reference on how
 to keep a subprocess running.

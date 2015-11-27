@@ -19,7 +19,7 @@ func handleOutput(s *bufio.Scanner, out chan<- string) {
 	}
 }
 
-// ExecCommand take a slice of string to be executed as the
+// ExecCommand take a slice of strings to be executed as the
 // command. stdout and stderr are passed to the channels handed
 // to the function.
 func ExecCommand(a []string, stdout chan<- string, stderr chan<- string) {

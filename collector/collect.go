@@ -18,8 +18,20 @@ type Event struct {
 }
 
 // JSONReader returns a io.Reader with the json in it.
-func (e *Event) JSONReader() io.Reader {
-	eventB, _ := json.Marshal(e)
+func (e *Event) JSONReader() (io.Reader, error) {
+	eventB, err := json.Marshal(e)
+	if err != nil {
+		return nil, err
+	}
 	reader := bytes.NewReader(eventB)
-	return reader
+	return reader, nil
+}
+
+// ParseEvent takes the json string of an event and returns the Event.
+func ParseEvent(str string) (*Event, error) {
+	e := &Event{}
+	if err := json.Unmarshal([]byte(str), &e); err != nil {
+		return e, err
+	}
+	return e, nil
 }

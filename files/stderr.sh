@@ -10,4 +10,4 @@ echo "before big sleep"
 sleep 3
 echo "after big sleep"
 
-echo "$@";
+# echo "$@";

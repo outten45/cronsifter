@@ -1,12 +1,11 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/outten45/cronsifter"
@@ -26,9 +25,6 @@ func main() {
 	flag.Parse()
 	cmdArgs = flag.Args()
 
-	regexps := cronsifter.GetExcludesRegexps(*excludesFile)
-	matcher := cronsifter.RegexChannels(regexps)
-
 	stdoutLog, err := cronsifter.NewSimpleLogger(getStdoutLogFile(), (*logSize * 1024), *logCount)
 	if err != nil {
 		log.Fatalf("Error with stdout file: %v", err)
@@ -38,55 +34,17 @@ func main() {
 		log.Fatalf("Error with stderr file: %v", err)
 	}
 
-	done := make(chan bool)
-	cout := make(chan string)
-	cerr := make(chan string)
-
-	if len(cmdArgs) > 0 {
-		go cronsifter.ExecCommand(cmdArgs, cout, cerr)
-	} else {
-		go readStdin(cout)
-		close(cerr)
-	}
-
-	go func() {
-		for s := range cout {
-			matcher.PrintCheckRegexp(os.Stdout, s)
-			stdoutLog.Write([]byte(s))
-		}
-		done <- true
-	}()
-	go func() {
-		for s := range cerr {
-			matcher.PrintCheckRegexp(os.Stderr, s)
-			stderrLog.Write([]byte(s))
-		}
-		done <- true
-	}()
-
-	<-done
-	<-done
-	close(done)
-}
-
-func readStdin(stdin chan<- string) {
-	defer close(stdin)
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		input, err := reader.ReadString('\n')
-		if err != nil && err == io.EOF {
-			break
-		}
-		stdin <- strings.TrimRight(input, "\n")
-	}
+	regexps := cronsifter.GetExcludesRegexps(*excludesFile)
+	matcher := cronsifter.RegexChannels(regexps)
+	cronsifter.RunMatch(matcher, cmdArgs, stdoutLog, stderrLog)
 }
 
 func getStdoutLogFile() string {
-	return fmt.Sprintf("%s.out.log", getCmdName())
+	return path.Join(*logDir, fmt.Sprintf("%s.out.log", getCmdName()))
 }
 
 func getStderrLogFile() string {
-	return fmt.Sprintf("%s.err.log", getCmdName())
+	return path.Join(*logDir, fmt.Sprintf("%s.err.log", getCmdName()))
 }
 
 func getCmdName() string {

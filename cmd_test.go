@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+
+	"github.com/outten45/cronsifter/collector"
 )
 
 func fakeExecCommand(command string, args ...string) *exec.Cmd {
@@ -41,7 +43,8 @@ func TestExecCommandStdoutStderr(t *testing.T) {
 
 	o := make(chan string)
 	e := make(chan string)
-	go ExecCommand([]string{"date"}, o, e)
+	evs := make(chan *collector.Event)
+	go ExecCommand([]string{"date"}, o, e, evs)
 
 	for s := range o {
 		t.Logf("s: %v / %v", s, stdoutResult)

@@ -1,12 +1,16 @@
 package cronsifter
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
+	"os"
 	"regexp"
 	"strings"
+
+	"github.com/outten45/cronsifter/collector"
 )
 
 type Match interface {
@@ -14,7 +18,7 @@ type Match interface {
 	PrintCheckRegexp(io.Writer, string)
 }
 
-// Matcher the left and right channels for the Matcher
+// Matcher the left and right channels for the Match
 // to use.
 type Matcher struct {
 	Left  chan string
@@ -93,4 +97,57 @@ func RegexChannels(regexps []*regexp.Regexp) *Matcher {
 		left = right
 	}
 	return &Matcher{Left: leftmost, Right: right}
+}
+
+// RunMatch take a matcher and cmd args, but run them.
+func RunMatch(matcher *Matcher, cmdArgs []string, stdoutLog, stderrLog *SimpleLogger) {
+	v := []string{}
+
+	done := make(chan bool)
+	cout := make(chan string)
+	cerr := make(chan string)
+	events := make(chan *collector.Event)
+
+	if len(cmdArgs) > 0 {
+		go ExecCommand(cmdArgs, cout, cerr, events)
+	} else {
+		go readStdin(cout)
+		close(cerr)
+	}
+
+	go func() {
+		for s := range cout {
+			matcher.PrintCheckRegexp(os.Stdout, s)
+			stdoutLog.Write([]byte(s))
+			if len(v) >= 20 {
+				_, v = v[0], v[1:]
+			}
+			v = append(v, s)
+		}
+		done <- true
+	}()
+	go func() {
+		for s := range cerr {
+			matcher.PrintCheckRegexp(os.Stderr, s)
+			stderrLog.Write([]byte(s))
+		}
+		done <- true
+	}()
+
+	<-done
+	<-done
+	close(done)
+
+}
+
+func readStdin(stdin chan<- string) {
+	defer close(stdin)
+	reader := bufio.NewReader(os.Stdin)
+	for {
+		input, err := reader.ReadString('\n')
+		if err != nil && err == io.EOF {
+			break
+		}
+		stdin <- strings.TrimRight(input, "\n")
+	}
 }

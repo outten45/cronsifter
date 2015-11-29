@@ -7,6 +7,8 @@ import (
 	"os/exec"
 	"syscall"
 	"time"
+
+	"github.com/outten45/cronsifter/collector"
 )
 
 var execCommand = exec.Command
@@ -22,7 +24,7 @@ func handleOutput(s *bufio.Scanner, out chan<- string) {
 // ExecCommand take a slice of strings to be executed as the
 // command. stdout and stderr are passed to the channels handed
 // to the function.
-func ExecCommand(a []string, stdout chan<- string, stderr chan<- string) {
+func ExecCommand(a []string, stdout chan<- string, stderr chan<- string, events chan<- *collector.Event) {
 	cmd := execCommand(a[0], a[1:]...)
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {

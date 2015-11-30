@@ -16,6 +16,7 @@ var (
 	logDir       = flag.String("dir", ".", "directory to write standard out and err log files to")
 	logSize      = flag.Int("size", 20, "file size in megabytes to rotate stdout and stderr files")
 	logCount     = flag.Int("count", 20, "rotate log file count for stdout and stderr files")
+	name         = flag.String("name", "NA", "the name of the service which is used events sent to the collectURL")
 	collectURL   = flag.String("collecturl", "", "the URL to post the results of the cron")
 	collectToken = flag.String("collecttoken", "", "the API token to send with the request")
 	cmdArgs      = []string{}

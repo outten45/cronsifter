@@ -9,18 +9,9 @@ import (
 
 // Context contains the server to send the notification to.
 type Context struct {
-	URL string
-}
-
-// NewEvent creates a collector.Event that contains some default
-// values set like the Service, Host and Time.
-func NewEvent(state, description, token string, tags []string) *collector.Event {
-	e := &collector.Event{
-		State:       state,
-		Description: description,
-		Tags:        tags,
-	}
-	return e
+	Name  string
+	Token string
+	URL   string
 }
 
 // Notify post the Event to the given server.

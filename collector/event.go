@@ -3,18 +3,39 @@ package collector
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
+	"os"
+	"time"
 )
 
 // Event contains the information to be sent to the collector.
 type Event struct {
-	Service     string
-	Host        string
-	State       string
-	Time        int
-	Description string
-	Tags        []string
-	Token       string
+	Service string
+	Host    string
+	State   string
+	Time    int
+	Message string
+	Tags    []string
+	Token   string
+}
+
+// NewEvent creates a collector.Event that contains some default
+// values set like the Host and Time.
+func NewEvent(service, state, message, token string, tags []string) *Event {
+	e := &Event{
+		State:   state,
+		Message: message,
+		Tags:    tags,
+	}
+	if h, err := os.Hostname(); err != nil {
+		e.Host = fmt.Sprintf("Unknown(%v)", err)
+	} else {
+		e.Host = h
+	}
+	now := time.Now()
+	e.Time = int(now.Unix())
+	return e
 }
 
 // JSONReader returns a io.Reader with the json in it.

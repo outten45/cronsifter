@@ -52,14 +52,14 @@ func ExecCommand(a []string, stdout chan<- string, stderr chan<- string, events 
 
 // Process representing the process that is going to be run.
 type Process struct {
-	Command  string
-	Args     []string
-	Delay    string
-	Pid      int
-	Status   string
-	Done     chan bool
-	OsP      *os.Process
-	respawns int
+	Command   string
+	Args      []string
+	Delay     string
+	Pid       int
+	Status    string
+	Done      chan bool
+	OsProcess *os.Process
+	respawns  int
 }
 
 // RunIt runs the Process and makes sure it keeps running.
@@ -91,20 +91,20 @@ func (p *Process) run() {
 		log.Fatalf("%s failed. %s\n", p.Command, err)
 		return
 	}
-	p.OsP = process
+	p.OsProcess = process
 	p.Pid = process.Pid
 	p.Status = "started"
 
 }
 
 func (p *Process) monitor() {
-	if p.OsP == nil {
+	if p.OsProcess == nil {
 		return
 	}
 	status := make(chan *os.ProcessState)
 	died := make(chan error)
 	go func() {
-		state, err := p.OsP.Wait()
+		state, err := p.OsProcess.Wait()
 		if err != nil {
 			died <- err
 			return
@@ -126,6 +126,6 @@ func (p *Process) monitor() {
 		RunIt(p)
 		p.Status = "restarted"
 	case err := <-died:
-		log.Printf("%d %s killed = %#v\n", p.OsP.Pid, p.Command, err)
+		log.Printf("%d %s killed = %#v\n", p.OsProcess.Pid, p.Command, err)
 	}
 }

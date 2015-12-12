@@ -62,11 +62,11 @@ command to cronsifter to then filter the results.
 A simple program to run the given command and keep it running. It assumes the
 command is meant to run in the foreground so if the command stops, `srunner`
 will restart it. `srunner` will default to waiting 10 seconds before starting
-the command again.  You can change this by setting the SRUNNER_SPAWN_DELAY
+the command again.  You can change this by setting the SPAWN_DELAY
 environment variable which is parsed using
 [ParseDuration](https://golang.org/pkg/time/#ParseDuration).
 
-    > SRUNNER_SPAWN_DELAY="3m" srunner gohttp
+    > SPAWN_DELAY="3m" srunner gohttp
 
 This would start the gohttp command and if it failed, `srunner` would wait 3
 minutes before re-spawning the process.

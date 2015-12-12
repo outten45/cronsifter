@@ -25,7 +25,7 @@ restarted if it stops.
 	flag.Parse()
 	cmdArgs := flag.Args()
 
-	delay := os.Getenv("SRUNNER_SPAWN_DELAY")
+	delay := os.Getenv("SPAWN_DELAY")
 	if delay == "" {
 		delay = "10s"
 	}
